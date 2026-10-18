@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Buku Kas</title>
+<meta name="description" content="Pencatat pemasukan dan pengeluaran untuk usaha kecil. Data tersimpan di browser.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231F2A44'/><path d='M28 26h34a10 10 0 0 1 10 10v38H38a10 10 0 0 1-10-10z' fill='%23fff'/><path d='M38 42h24M38 54h24' stroke='%231F2A44' stroke-width='6'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1F2A44;--muted:#6B7590;--bg:#F3F5F9;--card:#fff;--line:#DDE2EC;--in:#1E8E5A;--out:#D1493F;--acc:#2F5BEA;--in-bg:#E4F4EC;--out-bg:#FBE9E7}
+*{box-sizing:border-box;margin:0}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 20px 60px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+h1{font-size:34px;font-weight:800;letter-spacing:-.8px}
+header p{color:var(--muted);font-size:14px;max-width:420px;margin-top:2px}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600}
+button:hover{border-color:var(--ink)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);background:var(--card);border-radius:10px;margin-bottom:20px}
+.stat{padding:18px 22px}.stat+.stat{border-left:1px solid var(--line)}
+.stat small{color:var(--muted);font-size:13px;font-weight:500}
+.stat b{display:block;font-size:26px;font-weight:800;letter-spacing:-.5px;margin-top:2px}
+.in{color:var(--in)}.out{color:var(--out)}
+.grid{display:grid;grid-template-columns:320px 1fr;gap:20px;align-items:start}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px}
+.panel h2{font-size:16px;font-weight:700;margin-bottom:14px}
+label{display:block;font-size:13px;font-weight:600;margin:12px 0 5px}
+input,select{width:100%;font:inherit;font-size:14px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.seg input{position:absolute;opacity:0;width:0}
+.seg label{margin:0;text-align:center;padding:9px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:14px}
+.seg input:checked+label[for=t-in]{background:var(--in-bg);border-color:var(--in);color:var(--in)}
+.seg input:checked+label[for=t-out]{background:var(--out-bg);border-color:var(--out);color:var(--out)}
+.seg input:focus-visible+label{outline:2px solid var(--acc);outline-offset:2px}
+.save{width:100%;margin-top:18px;background:var(--ink);color:#fff;border-color:var(--ink);padding:11px;font-size:14px}
+.save:hover{background:#2c3a5e}
+.filters{display:flex;gap:8px;margin-bottom:12px}
+.filters input{flex:1}.filters input[type=month]{flex:0 0 160px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;padding:8px 8px;border-bottom:1px solid var(--line)}
+td{padding:11px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+td.n,th.n{text-align:right}td.n{font-weight:700;white-space:nowrap}
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:20px}
+.tag.in{background:var(--in-bg)}.tag.out{background:var(--out-bg)}
+.x{border:0;background:none;color:var(--muted);padding:4px 8px;font-size:18px;line-height:1}
+.x:hover{color:var(--out)}
+.empty{text-align:center;padding:36px 10px;color:var(--muted);font-size:14px}
+.empty button{margin-top:12px}
+.chart{display:flex;align-items:flex-end;gap:10px;height:120px;margin-top:6px}
+.day{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.bars{display:flex;align-items:flex-end;gap:3px;height:96px}
+.bars i{display:block;width:12px;border-radius:3px 3px 0 0;min-height:2px}
+.bars .a{background:var(--in)}.bars .b{background:var(--out)}
+.day span{font-size:11px;color:var(--muted)}
+.right{display:grid;gap:20px}
+.note{font-size:12px;color:var(--muted);margin-top:14px}
+@media(max-width:860px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr}.stat+.stat{border-left:0;border-top:1px solid var(--line)}.filters{flex-wrap:wrap}.filters input[type=month]{flex:1 1 140px}}
+@media(max-width:560px){th.hide,td.hide{display:none}h1{font-size:28px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div><h1>Buku Kas</h1><p>Catat pemasukan dan pengeluaran usaha. Data tersimpan di database browser kamu (IndexedDB), tanpa server.</p></div>
+  <div class="tools"><button id="csv">Unduh CSV</button><button id="bak">Cadangkan JSON</button><button id="imp">Pulihkan</button><input type="file" id="file" accept="application/json" hidden></div>
+</header>
+
+<section class="stats" aria-live="polite">
+  <div class="stat"><small>Pemasukan</small><b class="in" id="s-in">Rp0</b></div>
+  <div class="stat"><small>Pengeluaran</small><b class="out" id="s-out">Rp0</b></div>
+  <div class="stat"><small>Saldo</small><b id="s-bal">Rp0</b></div>
+</section>
+
+<div class="grid">
+  <div class="panel">
+    <h2>Catat transaksi</h2>
+    <div class="seg" role="radiogroup" aria-label="Jenis transaksi">
+      <input type="radio" name="tipe" id="t-in" value="masuk" checked><label for="t-in">Pemasukan</label>
+      <input type="radio" name="tipe" id="t-out" value="keluar"><label for="t-out">Pengeluaran</label>
+    </div>
+    <label for="tgl">Tanggal</label><input type="date" id="tgl">
+    <label for="kat">Kategori</label><select id="kat"></select>
+    <label for="ket">Keterangan</label><input type="text" id="ket" maxlength="80" placeholder="Contoh: Pesanan kopi 3 gelas">
+    <label for="jml">Jumlah (Rp)</label><input type="number" id="jml" min="1" step="1" inputmode="numeric" placeholder="25000">
+    <button class="save" id="simpan">Simpan transaksi</button>
+    <p class="note" id="msg" role="status"></p>
+  </div>
+
+  <div class="right">
+    <div class="panel">
+      <h2>7 hari terakhir</h2>
+      <div class="chart" id="chart"></div>
+    </div>
+    <div class="panel">
+      <h2>Riwayat</h2>
+      <div class="filters">
+        <input type="search" id="cari" placeholder="Cari keterangan..." aria-label="Cari keterangan">
+        <input type="month" id="bln" aria-label="Filter bulan">
+      </div>
+      <div id="list"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+const KAT={masuk:['Penjualan','Jasa','Lainnya'],keluar:['Bahan baku','Operasional','Gaji','Lainnya']};
+const $=s=>document.querySelector(s);
+const rp=n=>'Rp'+new Intl.NumberFormat('id-ID').format(n);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const iso=d=>{const z=new Date(d.getTime()-d.getTimezoneOffset()*6e4);return z.toISOString().slice(0,10)};
+const tglID=s=>new Date(s+'T00:00').toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
+
+/* ---------- Database (IndexedDB) ---------- */
+let db;
+const buka=()=>new Promise((ok,gagal)=>{
+  const r=indexedDB.open('buku-kas',1);
+  r.onupgradeneeded=()=>r.result.createObjectStore('trx',{keyPath:'id',autoIncrement:true});
+  r.onsuccess=()=>{db=r.result;ok()};
+  r.onerror=()=>gagal(r.error);
+});
+const req=r=>new Promise((ok,gagal)=>{r.onsuccess=()=>ok(r.result);r.onerror=()=>gagal(r.error)});
+const store=m=>db.transaction('trx',m).objectStore('trx');
+const semua=()=>req(store('readonly').getAll());
+const tambah=o=>req(store('readwrite').add(o));
+const hapus=id=>req(store('readwrite').delete(id));
+
+/* ---------- Tampilan ---------- */
+function isiKategori(){
+  const t=document.querySelector('input[name=tipe]:checked').value;
+  $('#kat').innerHTML=KAT[t].map(k=>`<option>${k}</option>`).join('');
+}
+function grafik(data){
+  const hari=[...Array(7)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-(6-i));return d});
+  const tot=hari.map(d=>{const k=iso(d);let a=0,b=0;data.forEach(x=>{if(x.tgl===k)x.tipe==='masuk'?a+=x.jml:b+=x.jml});return{d,a,b}});
+  const mx=Math.max(1,...tot.map(x=>Math.max(x.a,x.b)));
+  $('#chart').innerHTML=tot.map(x=>`<div class="day" title="${esc(tglID(iso(x.d)))}: masuk ${rp(x.a)}, keluar ${rp(x.b)}"><div class="bars"><i class="a" style="height:${x.a/mx*96}px"></i><i class="b" style="height:${x.b/mx*96}px"></i></div><span>${x.d.toLocaleDateString('id-ID',{weekday:'short'})}</span></div>`).join('');
+}
+async function tampil(){
+  const data=await semua();
+  data.sort((a,b)=>b.tgl.localeCompare(a.tgl)||b.id-a.id);
+  const m=data.filter(x=>x.tipe==='masuk').reduce((s,x)=>s+x.jml,0);
+  const k=data.filter(x=>x.tipe==='keluar').reduce((s,x)=>s+x.jml,0);
+  $('#s-in').textContent=rp(m);$('#s-out').textContent=rp(k);
+  const sal=$('#s-bal');sal.textContent=(m-k<0?'-':'')+rp(Math.abs(m-k));sal.className=m-k<0?'out':'';
+  grafik(data);
+  const q=$('#cari').value.trim().toLowerCase(),b=$('#bln').value;
+  const f=data.filter(x=>(!b||x.tgl.startsWith(b))&&(!q||(x.ket+' '+x.kat).toLowerCase().includes(q)));
+  if(!data.length){$('#list').innerHTML='<div class="empty">Belum ada transaksi.<br><button id="contoh">Isi contoh data</button></div>';$('#contoh').onclick=contoh;return}
+  if(!f.length){$('#list').innerHTML='<div class="empty">Tidak ada transaksi yang cocok.</div>';return}
+  $('#list').innerHTML=`<div style="overflow-x:auto"><table><thead><tr><th>Tanggal</th><th>Keterangan</th><th class="hide">Kategori</th><th class="n">Jumlah</th><th></th></tr></thead><tbody>`+
+  f.map(x=>`<tr><td>${tglID(x.tgl)}</td><td>${esc(x.ket)||'<span style="color:var(--muted)">(tanpa keterangan)</span>'}</td><td class="hide"><span class="tag ${x.tipe==='masuk'?'in':'out'}">${esc(x.kat)}</span></td><td class="n ${x.tipe==='masuk'?'in':'out'}">${x.tipe==='masuk'?'+':'-'}${rp(x.jml)}</td><td><button class="x" data-id="${x.id}" aria-label="Hapus transaksi">×</button></td></tr>`).join('')+
+  `</tbody></table></div><p class="note">${f.length} dari ${data.length} transaksi. <a href="#" id="kosong" style="color:var(--out)">Hapus semua data</a></p>`;
+}
+
+/* ---------- Aksi ---------- */
+function pesan(t){$('#msg').textContent=t;setTimeout(()=>{$('#msg').textContent=''},2500)}
+async function simpan(){
+  const jml=parseInt($('#jml').value,10);
+  if(!jml||jml<1){pesan('Isi jumlah dengan angka lebih dari 0.');$('#jml').focus();return}
+  if(!$('#tgl').value){pesan('Pilih tanggal dulu.');return}
+  await tambah({tipe:document.querySelector('input[name=tipe]:checked').value,tgl:$('#tgl').value,kat:$('#kat').value,ket:$('#ket').value.trim(),jml});
+  $('#ket').value='';$('#jml').value='';$('#ket').focus();pesan('Tersimpan.');tampil();
+}
+async function contoh(){
+  const d=n=>{const x=new Date();x.setDate(x.getDate()-n);return iso(x)};
+  const s=[['masuk',6,'Penjualan','Pesanan katering kantor',450000],['keluar',6,'Bahan baku','Belanja bahan di pasar',180000],['masuk',5,'Penjualan','Penjualan harian',210000],['keluar',4,'Operasional','Listrik dan gas',95000],['masuk',3,'Jasa','Jasa desain banner',150000],['masuk',2,'Penjualan','Penjualan harian',275000],['keluar',1,'Gaji','Upah pegawai harian',120000],['masuk',0,'Penjualan','Penjualan harian',330000]];
+  for(const [tipe,n,kat,ket,jml] of s)await tambah({tipe,tgl:d(n),kat,ket,jml});
+  tampil();
+}
+function unduh(nama,isi,tipe){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([isi],{type:tipe}));a.download=nama;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+
+document.querySelectorAll('input[name=tipe]').forEach(r=>r.onchange=isiKategori);
+$('#simpan').onclick=simpan;
+$('#jml').addEventListener('keydown',e=>{if(e.key==='Enter')simpan()});
+$('#cari').oninput=tampil;$('#bln').onchange=tampil;
+$('#list').addEventListener('click',async e=>{
+  const x=e.target.closest('.x');
+  if(x){await hapus(Number(x.dataset.id));tampil();return}
+  if(e.target.id==='kosong'){e.preventDefault();if(confirm('Hapus semua transaksi? Tindakan ini tidak bisa dibatalkan.')){await req(store('readwrite').clear());tampil()}}
+});
+$('#csv').onclick=async()=>{
+  const d=(await semua()).sort((a,b)=>a.tgl.localeCompare(b.tgl));
+  if(!d.length){pesan('Belum ada data.');return}
+  const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
+  unduh('buku-kas.csv','Tanggal,Jenis,Kategori,Keterangan,Jumlah\n'+d.map(x=>[x.tgl,x.tipe,q(x.kat),q(x.ket),x.jml].join(',')).join('\n'),'text/csv');
+};
+$('#bak').onclick=async()=>unduh('buku-kas-cadangan.json',JSON.stringify(await semua()),'application/json');
+$('#imp').onclick=()=>$('#file').click();
+$('#file').onchange=async e=>{
+  try{
+    const arr=JSON.parse(await e.target.files[0].text());
+    if(!Array.isArray(arr))throw 0;
+    let n=0;
+    for(const o of arr){if(o&&(o.tipe==='masuk'||o.tipe==='keluar')&&/^\d{4}-\d{2}-\d{2}$/.test(o.tgl)&&o.jml>0){await tambah({tipe:o.tipe,tgl:o.tgl,kat:String(o.kat||'Lainnya'),ket:String(o.ket||''),jml:Math.round(o.jml)});n++}}
+    pesan(n+' transaksi dipulihkan.');tampil();
+  }catch{pesan('File cadangan tidak valid.')}
+  e.target.value='';
+};
+
+$('#tgl').value=iso(new Date());
+isiKategori();
+buka().then(tampil).catch(()=>{$('#list').innerHTML='<div class="empty">Browser ini tidak mengizinkan penyimpanan data (mode privat?). Coba buka di jendela biasa.</div>'});
+</script>
+</body>
+</html>
